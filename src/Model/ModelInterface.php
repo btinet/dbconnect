@@ -4,12 +4,11 @@ namespace Vapita\Model;
 
 use PDO;
 use PDOStatement;
-use stdClass;
 
 interface ModelInterface
 {
     /**
-     * Stellt sicher, dass alle benötigten Parameter zur Herstellungen einer Datenbankverbindung vorhanden sind.
+     * Stellt sicher, dass alle benötigten Parameter zur Herstellung einer Datenbankverbindung vorhanden sind.
      */
     public function __construct( array $dsn = [], string $username = null, string $password = null, string $options = null, string $type = 'mysql');
 
@@ -18,9 +17,18 @@ interface ModelInterface
      */
     public function select(string $preparedStatement, array $data = [], string $mode = null);
 
-    public function findBy(string $table, array $data, $mode = PDO::FETCH_OBJ):array;
+    public function find(string $table, $id, $mode = null);
 
-    public function findOneBy(string $table, array $data, $mode = null):stdClass;
+    public function findAll(string $table, array $sortBy = [], $mode = PDO::FETCH_OBJ);
+
+    public function findBy(string $table, array $data, array $sortBy = [], $mode = PDO::FETCH_OBJ);
+
+    public function findOneBy(string $table, array $data, $mode = null);
+
+    public function persist(string $table, array $data, int $id);
+    public function update(string $table, array $data, array $where);
+    public function insert(string $table, array $data);
+    public function delete(string $table, array $data, int $limit = 1):int;
 
     /**
      * Führt vorbereitete Anweisungen aus.

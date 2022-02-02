@@ -27,6 +27,7 @@ namespace Vapita\Model {
                 parent::__construct($this->dsnString, $username, $password);
                 $this->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
                 $this->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE,PDO::FETCH_BOTH);
+                $this->setAttribute(PDO::ATTR_CASE,PDO::CASE_NATURAL);
 
             } catch (PDOException $e){
                 echo 'Exception abgefangen: '.$e->getMessage()."\n";
@@ -41,14 +42,12 @@ namespace Vapita\Model {
                 switch ($value)
                 {
                     case $value instanceof DateTime:
-                        echo("DateTime \n");
+                        $value = $value->getTimestamp();
                         break;
                     case is_string($value):
-                        echo("String \n");
                         break;
                     case is_numeric($value):
                         $value = strval($value);
-                        echo("Zahl {$value} \n");
                         break;
                 }
                 $statement->bindValue(':'.$key, $value);
@@ -57,20 +56,29 @@ namespace Vapita\Model {
             return $statement;
         }
 
-        public function findBy(string $table, array $data, $mode = PDO::FETCH_OBJ): array
+        public function find(string $table, $id, $mode = null)
         {
-            $preparedStatement = "";
-            $i = 0;
-            $dataLength = count($data);
-            foreach ($data as $field => $value){
-                $preparedStatement .= " {$field} = :{$field} ";
-                if (++$i !== $dataLength) $preparedStatement .= " AND ";
+            $preparedStatement = " id = {$id} ";
+            try{
+                $result =  self::select("SELECT * FROM {$table} WHERE ({$preparedStatement})");
+                return $result->fetchObject($mode);
+            } catch (PDOException $exception){
+                return $exception->getMessage();
             }
-            $result =  self::select("SELECT * FROM {$table} WHERE ({$preparedStatement})",$data);
-            return $result->fetchAll($mode);
         }
 
-        public function findOneBy(string $table, array $data, $mode = null): stdClass
+        public function findAll(string $table, array $sortBy = [], $mode = PDO::FETCH_OBJ)
+        {
+            try{
+                $orderData = self::createOrderData($sortBy);
+                $result =  self::select("SELECT * FROM $table $orderData");
+                return $result->fetchAll($mode);
+            } catch (PDOException $exception){
+                return $exception->getMessage();
+            }
+        }
+
+        public function findBy(string $table, array $data, array $sortBy = [], $mode = PDO::FETCH_OBJ)
         {
             $preparedStatement = "";
             $i = 0;
@@ -79,15 +87,147 @@ namespace Vapita\Model {
                 $preparedStatement .= " {$field} = :{$field} ";
                 if (++$i !== $dataLength) $preparedStatement .= " AND ";
             }
-            $result =  self::select("SELECT * FROM {$table} WHERE ({$preparedStatement}) LIMIT 0,1",$data, $mode);
+            try{
+                $orderData = self::createOrderData($sortBy);
+                $result =  self::select("SELECT * FROM $table WHERE ($preparedStatement) $orderData",$data);
+                return $result->fetchAll($mode);
+            } catch (PDOException $exception){
+                return $exception->getMessage();
+            }
+        }
 
+        public function findOneBy(string $table, array $data, $mode = null)
+        {
+            $preparedStatement = "";
+            $i = 0;
+            $dataLength = count($data);
+            foreach ($data as $field => $value){
+                $preparedStatement .= " {$field} = :{$field} ";
+                if (++$i !== $dataLength) $preparedStatement .= " AND ";
+            }
+            try{
+                $result =  self::select("SELECT * FROM {$table} WHERE ({$preparedStatement}) LIMIT 0,1",$data, $mode);
                 if (false === $object = $result->fetchObject($mode)) return new stdClass();
                 return $object;
+            } catch (PDOException $exception){
+                return $exception->getMessage();
+            }
         }
 
         public function execute(PDOStatement $statement): bool
         {
             return $statement->execute();
+        }
+
+        private function createOrderData($sortBy):string
+        {
+            $orderData = "";
+            if($sortBy){
+                $orderData .= " ORDER BY ";
+                $i = 0;
+                foreach($sortBy as $column => $direction)
+                {
+                    $orderData .= "$column $direction";
+                    $orderData .= (++$i === count($sortBy)) ?  ';' : ',';
+                }
+            }
+            return $orderData;
+        }
+
+        public function persist(string $table, array $data, int $id = null)
+        {
+            if ($id){
+                if (false !== $result = self::select("SELECT * FROM $table WHERE id = :id", ['id' => $id])){
+                    return self::update($table, $data, ['id' => $id]);
+                }
+            }
+            return self::insert($table, $data);
+        }
+
+        public function insert(string $table, array $data): string
+        {
+            ksort($data);
+
+            $table = strtolower($table);
+            $fieldNames = implode(', ', array_keys($data));
+            $fieldValues = ':' . implode(', :', array_keys($data));
+
+            $stmt = self::prepare(" INSERT INTO $table ($fieldNames) VALUES ($fieldValues) ");
+
+            foreach ($data as $key => $value) {
+                $stmt->bindValue(":$key", $value);
+            }
+
+            self::execute($stmt);
+            return $this->lastInsertId();
+        }
+
+        public function update(string $table, array $data, array $where): int
+        {
+            ksort($data);
+
+            $fieldDetails = null;
+            foreach ($data as $key => $value) {
+                $fieldDetails .= "$key = :field_$key,";
+            }
+            $fieldDetails = rtrim($fieldDetails, ',');
+
+            $whereDetails = null;
+            $i = 0;
+            foreach ($where as $key => $value) {
+                if ($i == 0) {
+                    $whereDetails .= "$key = :where_$key";
+                } else {
+                    $whereDetails .= " AND $key = :where_$key";
+                }
+                $i++;
+            }
+            $whereDetails = ltrim($whereDetails, ' AND ');
+
+            $stmt = self::prepare("UPDATE $table SET $fieldDetails WHERE $whereDetails");
+
+            foreach ($data as $key => $value) {
+                $stmt->bindValue(":field_$key", $value);
+            }
+
+            foreach ($where as $key => $value) {
+                $stmt->bindValue(":where_$key", $value);
+            }
+
+            self::execute($stmt);
+            return $stmt->rowCount();
+        }
+
+        public function delete(string $table, array $data, int $limit = 1): int
+        {
+            ksort($data);
+
+            $whereDetails = null;
+            $i = 0;
+            foreach ($data as $key => $value) {
+                if ($i == 0) {
+                    $whereDetails .= "$key = :$key";
+                } else {
+                    $whereDetails .= " AND $key = :$key";
+                }
+                $i++;
+            }
+            $whereDetails = ltrim($whereDetails, ' AND ');
+
+            //if limit is a number use a limit on the query
+            $useLimit = "";
+            if (is_numeric($limit)) {
+                $useLimit = "LIMIT $limit";
+            }
+
+            $stmt = self::prepare("DELETE FROM $table WHERE $whereDetails $useLimit");
+
+            foreach ($data as $key => $value) {
+                $stmt->bindValue(":$key", $value);
+            }
+
+            self::execute($stmt);
+            return $stmt->rowCount();
         }
     }
 }
