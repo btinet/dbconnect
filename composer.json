@@ -1,0 +1,21 @@
+{
+    "name": "bwagner/dbconnect",
+    "description": "Simple MySQL-PHP-Class",
+    "type": "library",
+    "license": "mit",
+    "autoload": {
+        "psr-4": {
+            "Vapita\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Benjamin Wagner",
+            "email": "benjamin.voigt@vapita.de"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "ext-pdo": "*"
+    }
+}
