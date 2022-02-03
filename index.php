@@ -107,7 +107,7 @@ $students = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC']
                 <div class="card-header">
                     StudentIn bearbeiten
                 </div>
-                <div class="card-body">
+                <div class="card-body bg-light">
                     <h5 class="card-title"><?= $student->full_name ??  'Einzelansicht' ?></h5>
                     <!-- Beginn, Formular zum Speichern eines Datensatzes -->
                     <?php if($student): ?>
@@ -130,10 +130,11 @@ $students = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC']
                     <?php endif ?>
                     <!-- Ende, Formular -->
                 </div>
+                <div class="card-footer"></div>
             </div>
         </div>
         <div class="col-12 col-lg-7">
-            <div class="card">
+            <div class="card bg-light">
                 <div class="card-header">
                     Alle StudentInnen
                 </div>
@@ -159,7 +160,7 @@ $students = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC']
                 <div class="list-group list-group-flush">
                     <!-- Für jeden Datensatz einen Listeneintrag erstellen -->
                     <?php foreach ($students as $student) : ?>
-                        <a href="<?= "{$_SERVER['REMOTE_HOST']}?student_id={$student->id}" ?>" class="<?= $student->id !== $_GET['student_id'] ?: 'active' ?> list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <a href="<?= "{$_SERVER['REMOTE_HOST']}?student_id={$student->id}" ?>" class="list-group-item-primary <?= $student->id !== $_GET['student_id'] ?: 'active' ?> list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                             <span>
                                <?= $student->first_name . ' ' . $student->last_name ?>
                             </span>
@@ -172,6 +173,7 @@ $students = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC']
                     <?php endforeach; ?>
                     <!-- Ende, Listeneintrag -->
                 </div>
+                <div class="card-footer"></div>
             </div>
         </div>
     </div>
