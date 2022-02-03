@@ -1,19 +1,30 @@
 <?php
 
-// use-Statement, um später einfacher eine Klasse über den Autoloader zu laden.
-use Vapita\Entity\Student;
 use Vapita\Model\MysqlModel;
 
-// Composer Autoload Class inkludieren.
+/**
+ * Composer Hilfsklasse laden.
+ */
 include('./vendor/autoload.php');
 
-// Neue Instanz der Datenbank-Klasse mit Verbindungsdaten erstellen. Ändere hier die Angaben entsprechend deiner Datenbank.
+/**
+ * Neue Instanz der Datenbank-Klasse mit Verbindungsdaten erstellen.
+ * Ändere hier die Angaben entsprechend deiner Datenbank.
+ */
 $db = new MysqlModel(['host' => 'localhost:8889','dbname' => 'test','charset' =>'utf8'],'root','root');
 
+/**
+ * Ist der Schlüssel 'delete' im $_POST-Array vorhanden, führe Methode zum Löschen
+ * eines Datensatzes anhand gegebener Id aus.
+ */
 if(key_exists('delete',$_POST)){
     $db->delete('student',['id' => $_POST['delete']]);
 }
 
+/**
+ * Ist der Schlüssel 'persist' im $_POST-Array vorhanden, führe Methode zum Erstellen
+ * eines Datensatzes anhand gegebener Werte aus.
+ */
 if(key_exists('persist',$_POST)){
     $db->persist('student',[
             'first_name' => $_POST['first_name'],
@@ -21,17 +32,13 @@ if(key_exists('persist',$_POST)){
     ]);
 }
 
-// Verkürzte Methode zum Abruf von mehreren Datensätzen anhand von Suchparametern.
-$studentSingleResultById = $db->find('student',34, Student::class);
-$studentResultsByValue = $db->findBy('student',['last_name' => 'Rölke']);
-$studentSingleResultByValue = $db->findOneBy('student',['first_name' => 'Anna']);
-$studentAll = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC']);
-
-
-
-
-// Datensätze formatiert ausgeben. Man könnte hier noch mit "if" prüfen, ob überhaupt Datensätze gefunden wurden.
+/**
+ * Alle Datensätze der Tabelle 'student' der Variable $students als Array zuweisen.
+ * Datensätze zuerst nach Nachname, dann nach Vorname sortieren (jeweils aufsteigend).
+ */
+$students = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC']);
 ?>
+<!-- Beginn, HTML Dokument -->
 <!doctype html>
 <html lang="de">
 <head>
@@ -71,6 +78,7 @@ $studentAll = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC
                 <div class="card-body">
                     <h5 class="card-title">Übersicht</h5>
                     <h6 class="card-subtitle mb-2 text-muted">Weitere StudentInnen hinzufügen</h6>
+                    <!-- Beginn, Formular zum Speichern eines Datensatzes -->
                     <form method="post">
                         <div class="row g-3">
                             <div class="col-12 col-lg-5">
@@ -84,18 +92,23 @@ $studentAll = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC
                             </div>
                         </div>
                     </form>
+                    <!-- Ende, Formular -->
                 </div>
                 <ul class="list-group list-group-flush">
-                    <?php foreach ($studentAll as $student) : ?>
+                    <!-- Für jeden Datensatz einen Listeneintrag erstellen -->
+                    <?php foreach ($students as $student) : ?>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span>
                                <?= $student->first_name . ' ' . $student->last_name ?>
                             </span>
+                            <!-- Beginn, Formular zum Löschen des Datensatzes -->
                             <form method="post">
                                 <button class="btn btn-sm btn-danger" type="submit" name="delete" value="<?= $student->id ?>">Löschen</button>
                             </form>
+                            <!-- Ende, Formular -->
                         </li>
                     <?php endforeach; ?>
+                    <!-- Ende, Listeneintrag -->
                 </ul>
             </div>
         </div>
