@@ -82,14 +82,17 @@ $students = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC']
 <body>
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container">
-        <a class="navbar-brand" href="#">Datenbanken</a>
+        <a class="navbar-brand" href="http://<?= $_SERVER['HTTP_HOST'] ?>">Datenbanken</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
-                    <a class="nav-link active" aria-current="page" href="<?= $_SERVER['PHP_SELF'] ?>">Home</a>
+                    <a class="nav-link active" aria-current="page" href="http://<?= $_SERVER['HTTP_HOST'] ?>">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" target="_blank" href="https://github.com/btinet/dbconnect">Docs</a>
                 </li>
             </ul>
         </div>
