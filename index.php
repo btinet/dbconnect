@@ -11,7 +11,15 @@ include('./vendor/autoload.php');
  * Neue Instanz der Datenbank-Klasse mit Verbindungsdaten erstellen.
  * Ändere hier die Angaben entsprechend deiner Datenbank.
  */
-$db = new MysqlModel(['host' => 'localhost:8889','dbname' => 'test','charset' =>'utf8'],'root','root');
+$db = new MysqlModel(
+        [
+        'host' => 'localhost:8889',
+        'dbname' => 'test',
+        'charset' =>'utf8'
+        ],
+        'root',
+        'root'
+);
 
 /**
  * Ist der Schlüssel 'delete' im $_POST-Array vorhanden, führe Methode zum Löschen
@@ -37,7 +45,9 @@ if(key_exists('persist',$_POST)){
  * Datensätze zuerst nach Nachname, dann nach Vorname sortieren (jeweils aufsteigend).
  */
 $students = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC']);
+
 ?>
+
 <!-- Beginn, HTML Dokument -->
 <!doctype html>
 <html lang="de">
