@@ -1,17 +1,18 @@
 <?php
 
 // use-Statement, um später einfacher eine Klasse über den Autoloader zu laden.
-use Vapita\Model\Database;
+use Vapita\Entity\Student;
+use Vapita\Model\MysqlModel;
 
 // Composer Autoload Class inkludieren.
 include('./vendor/autoload.php');
 
 // Neue Instanz der Datenbank-Klasse mit Verbindungsdaten erstellen. Ändere hier die Angaben entsprechend deiner Datenbank.
-$db = new Database(['host' => 'localhost:8889','dbname' => 'test','charset' =>'utf8'],'root','root');
+$db = new MysqlModel(['host' => 'localhost:8889','dbname' => 'test','charset' =>'utf8'],'root','root');
 
 
 // Verkürzte Methode zum Abruf von mehreren Datensätzen anhand von Suchparametern.
-$studentSingleResultById = $db->find('student',34);
+$studentSingleResultById = $db->find('student',34, Student::class);
 $studentResultsByValue = $db->findBy('student',['last_name' => 'Rölke']);
 $studentSingleResultByValue = $db->findOneBy('student',['first_name' => 'Anna']);
 $studentAll = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC']);
@@ -21,7 +22,7 @@ $studentAll = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC
 // Datensätze formatiert ausgeben. Man könnte hier noch mit "if" prüfen, ob überhaupt Datensätze gefunden wurden.
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="de">
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
@@ -40,18 +41,12 @@ $studentAll = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
+            <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
                     <a class="nav-link active" aria-current="page" href="#">Home</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="#">Abrufen</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Bearbeiten</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Löschen</a>
                 </li>
             </ul>
         </div>
@@ -60,7 +55,7 @@ $studentAll = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC
 
 <div class="container my-3">
     <div class="row">
-        <div class="col-12 col-lg-6">
+        <div class="col-12">
             <div class="card">
                 <div class="card-header">
                     Alle StudentInnen
@@ -78,7 +73,11 @@ $studentAll = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC
         </div>
     </div>
 </div>
+<?php
 
+print_r($studentSingleResultById->getId());
+
+?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 </body>
 </html>
