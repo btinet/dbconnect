@@ -76,9 +76,9 @@ namespace Vapita\Model {
          */
         public function find(string $table, $id, string $entity = stdClass::class)
         {
-            $preparedStatement = " id = {$id} ";
+            $preparedStatement = " id = :id ";
             try{
-                $result =  self::select("SELECT * FROM {$table} WHERE ({$preparedStatement})");
+                $result =  self::select("SELECT * FROM {$table} WHERE {$preparedStatement}",['id' => $id]);
                 return $result->fetchObject($entity);
             } catch (PDOException $exception){
                 return $exception->getMessage();
