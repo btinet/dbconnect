@@ -13,7 +13,7 @@ include('./vendor/autoload.php');
  */
 $db = new MysqlModel(
         [
-        'host' => 'localhost:8889',
+        'host' => 'localhost:3306',
         'dbname' => 'test',
         'charset' =>'utf8'
         ],
@@ -38,6 +38,24 @@ if(key_exists('persist',$_POST)){
             'first_name' => $_POST['first_name'],
             'last_name' => $_POST['last_name'],
     ]);
+}
+
+if(key_exists('update',$_POST)){
+    $db->persist('student',[
+        'first_name' => $_POST['first_name'],
+        'last_name' => $_POST['last_name'],
+    ],
+    $_POST['id']);
+}
+
+$student = false;
+
+/**
+ * Datensatz von StudentIn anhand per GET übergebener Id abrufen und in Variable speichern.
+ */
+if(key_exists('student_id',$_GET)){
+    $student = $db->find('student',$_GET['student_id']);
+    $student->full_name = "{$student->first_name} {$student->last_name}";
 }
 
 /**
@@ -79,8 +97,38 @@ $students = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC']
 </nav>
 
 <div class="container my-3">
-    <div class="row">
-        <div class="col-12">
+    <div class="row g-3">
+        <div class="col-12 col-lg-5 order-first order-lg-last">
+            <div class="card">
+                <div class="card-header">
+                    StudentIn bearbeiten
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title"><?= $student->full_name ??  'Einzelansicht' ?></h5>
+                    <!-- Beginn, Formular zum Speichern eines Datensatzes -->
+                    <?php if($student): ?>
+                    <form method="post" action="http://<?= $_SERVER['HTTP_HOST'] ?>">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label" for="first_name">Vorname</label>
+                                <input type="text" id="first_name" name="first_name" class="form-control" value="<?= $student->first_name ?? '' ?>" placeholder="Vorname" aria-label="First name" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="last_name">Nachname</label>
+                                <input type="text" id="last_name" name="last_name" class="form-control" value="<?= $student->last_name ?? '' ?>" placeholder="Nachname" aria-label="Last name" required>
+                            </div>
+                            <div class="col-12">
+                                <input type="hidden" name="id" value="<?= $student->id ?>">
+                                <button class="btn btn-primary w-100" type="submit" name="update">Aktualisieren</button>
+                            </div>
+                        </div>
+                    </form>
+                    <?php endif ?>
+                    <!-- Ende, Formular -->
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-lg-7">
             <div class="card">
                 <div class="card-header">
                     Alle StudentInnen
@@ -91,23 +139,23 @@ $students = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC']
                     <!-- Beginn, Formular zum Speichern eines Datensatzes -->
                     <form method="post">
                         <div class="row g-3">
-                            <div class="col-12 col-lg-5">
+                            <div class="col-12 col-lg-4">
                                 <input type="text" name="first_name" class="form-control" placeholder="Vorname" aria-label="First name" required>
                             </div>
-                            <div class="col-12 col-lg-5">
+                            <div class="col-12 col-lg-4">
                                 <input type="text" name="last_name" class="form-control" placeholder="Nachname" aria-label="Last name" required>
                             </div>
-                            <div class="col-12 col-lg-2">
-                                <button class="btn btn-primary w-100" type="submit" name="persist">Speichern</button>
+                            <div class="col-12 col-lg-4">
+                                <button class="btn btn-success w-100" type="submit" name="persist">Speichern</button>
                             </div>
                         </div>
                     </form>
                     <!-- Ende, Formular -->
                 </div>
-                <ul class="list-group list-group-flush">
+                <div class="list-group list-group-flush">
                     <!-- Für jeden Datensatz einen Listeneintrag erstellen -->
                     <?php foreach ($students as $student) : ?>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <a href="<?= "{$_SERVER['REMOTE_HOST']}?student_id={$student->id}" ?>" class="<?= $student->id !== $_GET['student_id'] ?: 'active' ?> list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                             <span>
                                <?= $student->first_name . ' ' . $student->last_name ?>
                             </span>
@@ -116,10 +164,10 @@ $students = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC']
                                 <button class="btn btn-sm btn-danger" type="submit" name="delete" value="<?= $student->id ?>">Löschen</button>
                             </form>
                             <!-- Ende, Formular -->
-                        </li>
+                        </a>
                     <?php endforeach; ?>
                     <!-- Ende, Listeneintrag -->
-                </ul>
+                </div>
             </div>
         </div>
     </div>
