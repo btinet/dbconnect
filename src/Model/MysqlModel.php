@@ -3,16 +3,22 @@
 namespace Vapita\Model {
 
     use DateTime;
-    use Exception;
     use PDO;
     use PDOException;
     use PDOStatement;
     use stdClass;
 
-    class Database extends PDO implements ModelInterface
+    class MysqlModel extends PDO implements ModelInterface
     {
         public string $dsnString;
 
+        /**
+         * @param array $dsn
+         * @param string|null $username
+         * @param string|null $password
+         * @param string|null $options
+         * @param string $type
+         */
         public function __construct(array $dsn = [], string $username = null, string $password = null, string $options = null, string $type = 'mysql')
         {
             try {
@@ -35,7 +41,13 @@ namespace Vapita\Model {
 
         }
 
-        public function select(string $preparedStatement, array $data = [], $mode = null)
+        /**
+         * @param string $preparedStatement
+         * @param array $data
+         * @param $mode
+         * @return false|PDOStatement
+         */
+        private function select(string $preparedStatement, array $data = [], $mode = null)
         {
             $statement = $this->prepare($preparedStatement);
             foreach ($data as $key => $value){
@@ -56,18 +68,30 @@ namespace Vapita\Model {
             return $statement;
         }
 
-        public function find(string $table, $id, $mode = null)
+        /**
+         * @param string $table
+         * @param $id
+         * @param string $entity
+         * @return false|mixed|object|string
+         */
+        public function find(string $table, $id, string $entity = stdClass::class)
         {
             $preparedStatement = " id = {$id} ";
             try{
                 $result =  self::select("SELECT * FROM {$table} WHERE ({$preparedStatement})");
-                return $result->fetchObject($mode);
+                return $result->fetchObject($entity);
             } catch (PDOException $exception){
                 return $exception->getMessage();
             }
         }
 
-        public function findAll(string $table, array $sortBy = [], $mode = PDO::FETCH_OBJ)
+        /**
+         * @param string $table
+         * @param array $sortBy
+         * @param int|null $mode
+         * @return array|false|string
+         */
+        public function findAll(string $table, array $sortBy = [], ?int $mode = PDO::FETCH_OBJ)
         {
             try{
                 $orderData = self::createOrderData($sortBy);
@@ -78,6 +102,13 @@ namespace Vapita\Model {
             }
         }
 
+        /**
+         * @param string $table
+         * @param array $data
+         * @param array $sortBy
+         * @param $mode
+         * @return array|false|string
+         */
         public function findBy(string $table, array $data, array $sortBy = [], $mode = PDO::FETCH_OBJ)
         {
             $preparedStatement = "";
@@ -96,6 +127,12 @@ namespace Vapita\Model {
             }
         }
 
+        /**
+         * @param string $table
+         * @param array $data
+         * @param $mode
+         * @return false|mixed|object|stdClass|string
+         */
         public function findOneBy(string $table, array $data, $mode = null)
         {
             $preparedStatement = "";
@@ -114,11 +151,19 @@ namespace Vapita\Model {
             }
         }
 
+        /**
+         * @param PDOStatement $statement
+         * @return bool
+         */
         public function execute(PDOStatement $statement): bool
         {
             return $statement->execute();
         }
 
+        /**
+         * @param $sortBy
+         * @return string
+         */
         private function createOrderData($sortBy):string
         {
             $orderData = "";
@@ -134,6 +179,12 @@ namespace Vapita\Model {
             return $orderData;
         }
 
+        /**
+         * @param string $table
+         * @param array $data
+         * @param int|null $id
+         * @return int|string
+         */
         public function persist(string $table, array $data, int $id = null)
         {
             if ($id){
@@ -144,6 +195,11 @@ namespace Vapita\Model {
             return self::insert($table, $data);
         }
 
+        /**
+         * @param string $table
+         * @param array $data
+         * @return string
+         */
         public function insert(string $table, array $data): string
         {
             ksort($data);
@@ -162,6 +218,12 @@ namespace Vapita\Model {
             return $this->lastInsertId();
         }
 
+        /**
+         * @param string $table
+         * @param array $data
+         * @param array $where
+         * @return int
+         */
         public function update(string $table, array $data, array $where): int
         {
             ksort($data);
@@ -198,6 +260,12 @@ namespace Vapita\Model {
             return $stmt->rowCount();
         }
 
+        /**
+         * @param string $table
+         * @param array $data
+         * @param int $limit
+         * @return int
+         */
         public function delete(string $table, array $data, int $limit = 1): int
         {
             ksort($data);
