@@ -123,7 +123,7 @@ $students = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC']
 <div class="container my-3">
     <div class="row g-3">
         <div class="col-12 col-lg-5 order-first order-lg-last">
-            <div class="card">
+            <div class="card" style="border: 1px solid  var(--bs-gray-300)">
                 <div class="card-header">
                     StudentIn bearbeiten
                 </div>
@@ -160,7 +160,7 @@ $students = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC']
             </div>
         </div>
         <div class="col-12 col-lg-7">
-            <div class="card bg-light">
+            <div class="card bg-light" style="border: 1px solid  var(--bs-gray-300)">
                 <div class="card-header">
                     Alle StudentInnen
                 </div>
