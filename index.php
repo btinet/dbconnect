@@ -8,6 +8,19 @@ use Vapita\Model\MysqlModel;
 include('./vendor/autoload.php');
 
 /**
+ * Definiere Ergebnisvariablen für die Datenbankaktionen. Sind diese nicht 'false', wird an späterer
+ * Stelle eine Information ausgegeben, die auf das Ergebnis der getätigten Aktion hinweist.
+ */
+$resultInsert = false;
+$resultUpdate = false;
+$resultDelete = false;
+
+/**
+ * Container für die Datensätze definieren.
+ */
+$student = false;
+
+/**
  * Neue Instanz der Datenbank-Klasse mit Verbindungsdaten erstellen.
  * Ändere hier die Angaben entsprechend deiner Datenbank.
  */
@@ -21,34 +34,38 @@ $db = new MysqlModel(
         'root'
 );
 
+// Datenbankaktionen auslösen
+
 /**
- * Ist der Schlüssel 'delete' im $_POST-Array vorhanden, führe Methode zum Löschen
+ * Ist der Schlüssel "delete" im $_POST-Array vorhanden, führe Methode zum Löschen
  * eines Datensatzes anhand gegebener Id aus.
  */
 if(key_exists('delete',$_POST)){
-    $db->delete('student',['id' => $_POST['delete']]);
+    $resultDelete = $db->delete('student',['id' => $_POST['delete']]);
 }
 
 /**
- * Ist der Schlüssel 'persist' im $_POST-Array vorhanden, führe Methode zum Erstellen
+ * Ist der Schlüssel "persist" im $_POST-Array vorhanden, führe Methode zum Erstellen
  * eines Datensatzes anhand gegebener Werte aus.
  */
 if(key_exists('persist',$_POST)){
-    $db->persist('student',[
+    $resultInsert = $db->persist('student',[
             'first_name' => $_POST['first_name'],
             'last_name' => $_POST['last_name'],
     ]);
 }
 
+/**
+ * Ist der Schlüssel "update" im $_POST-Array vorhanden, führe Methode zum Aktualisieren
+ * eines Datensatzes anhand gegebener Werte aus.
+ */
 if(key_exists('update',$_POST)){
-    $db->persist('student',[
+    $resultUpdate = $db->persist('student',[
         'first_name' => $_POST['first_name'],
         'last_name' => $_POST['last_name'],
     ],
     $_POST['id']);
 }
-
-$student = false;
 
 /**
  * Datensatz von StudentIn anhand per GET übergebener Id abrufen und in Variable speichern.
@@ -93,7 +110,10 @@ $students = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC']
                     <a class="nav-link active" aria-current="page" href="http://<?= $_SERVER['HTTP_HOST'] ?>">Home</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link active" aria-current="page" target="_blank" href="https://github.com/btinet/dbconnect">Docs</a>
+                    <a class="nav-link" target="_blank" href="https://www.vapita.de/develop">Vapita Developer</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" target="_blank" href="https://github.com/btinet/dbconnect">Docs</a>
                 </li>
             </ul>
         </div>
@@ -111,7 +131,7 @@ $students = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC']
                     <h5 class="card-title"><?= $student->full_name ??  'Einzelansicht' ?></h5>
                     <!-- Beginn, Formular zum Speichern eines Datensatzes -->
                     <?php if($student): ?>
-                    <form method="post" action="http://<?= $_SERVER['HTTP_HOST'] ?>">
+                    <form method="post">
                         <div class="row g-3">
                             <div class="col-12">
                                 <label class="form-label" for="first_name">Vorname</label>
@@ -130,7 +150,13 @@ $students = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC']
                     <?php endif ?>
                     <!-- Ende, Formular -->
                 </div>
-                <div class="card-footer"></div>
+                <div class="card-footer">
+                    <?php if(false !== $resultUpdate): ?>
+                    <div class="bg-success-light text-black p-1 text-center">
+                        <?= $resultUpdate ? 'Datensatz aktualisiert' : 'Datensatz unverändert' ?>
+                    </div>
+                    <?php endif ?>
+                </div>
             </div>
         </div>
         <div class="col-12 col-lg-7">
@@ -158,6 +184,7 @@ $students = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC']
                     <!-- Ende, Formular -->
                 </div>
                 <div class="list-group list-group-flush">
+                    <span class="list-group-item">StudentInnen</span>
                     <!-- Für jeden Datensatz einen Listeneintrag erstellen -->
                     <?php foreach ($students as $student) : ?>
                         <a href="<?= "{$_SERVER['REMOTE_HOST']}?student_id={$student->id}" ?>" class="list-group-item-primary <?= $student->id !== $_GET['student_id'] ?: 'active' ?> list-group-item list-group-item-action d-flex justify-content-between align-items-center">
@@ -173,7 +200,18 @@ $students = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC']
                     <?php endforeach; ?>
                     <!-- Ende, Listeneintrag -->
                 </div>
-                <div class="card-footer"></div>
+                <div class="card-footer">
+                    <?php if(false !== $resultInsert): ?>
+                        <div class="bg-success-light text-black p-1 text-center">
+                            <?= $resultInsert ? 'Datensatz erstellt' : 'Datensatz unverändert' ?>
+                        </div>
+                    <?php endif ?>
+                    <?php if(false !== $resultDelete): ?>
+                        <div class="bg-danger-light text-black p-1 text-center">
+                            <?= $resultInsert ? 'Datensatz nicht gelöscht' : 'Datensatz gelöscht' ?>
+                        </div>
+                    <?php endif ?>
+                </div>
             </div>
         </div>
     </div>
