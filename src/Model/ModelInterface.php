@@ -14,24 +14,22 @@ interface ModelInterface
     public function __construct( array $dsn = [], string $username = null, string $password = null, string $options = null, string $type = 'mysql');
 
     /**
-     * @param string $table
      * @param int $id
      * @param string $entity
      * @return mixed
      *
      * Liefert einen Datensatz anhand des Primary Key.
      */
-    public function find(string $table, int $id, string $entity = stdClass::class);
+    public function find(string $entity, int $id);
 
     /**
-     * @param string $table
+     * @param string $entity
      * @param array $sortBy
-     * @param int|null $mode
      * @return mixed
      *
      * Liefert alle Datensätze einer Tabelle.
      */
-    public function findAll(string $table, array $sortBy = [], ?int $mode = PDO::FETCH_OBJ);
+    public function findAll(string $entity, array $sortBy = []);
 
     /**
      * @param string $table
