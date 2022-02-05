@@ -1,5 +1,6 @@
 <?php
 
+use Vapita\Entity\Student;
 use Vapita\Model\MysqlModel;
 
 /**
@@ -71,15 +72,14 @@ if(key_exists('update',$_POST)){
  * Datensatz von StudentIn anhand per GET übergebener Id abrufen und in Variable speichern.
  */
 if(key_exists('student_id',$_GET)){
-    $student = $db->find('student',$_GET['student_id']);
-    $student->full_name = "{$student->first_name} {$student->last_name}";
+    $student = $db->find(Student::class,$_GET['student_id']);
 }
 
 /**
  * Alle Datensätze der Tabelle 'student' der Variable $students als Array zuweisen.
  * Datensätze zuerst nach Nachname, dann nach Vorname sortieren (jeweils aufsteigend).
  */
-$students = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC']);
+$students = $db->findAll(Student::class,['last_name' => 'ASC', 'first_name' => 'ASC']);
 
 ?>
 
@@ -128,21 +128,21 @@ $students = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC']
                     StudentIn bearbeiten
                 </div>
                 <div class="card-body bg-light">
-                    <h5 class="card-title"><?= $student->full_name ??  'Einzelansicht' ?></h5>
+                    <h5 class="card-title"><?= $student ??  'Einzelansicht' ?></h5>
                     <!-- Beginn, Formular zum Speichern eines Datensatzes -->
                     <?php if($student): ?>
                     <form method="post">
                         <div class="row g-3">
                             <div class="col-12">
                                 <label class="form-label" for="first_name">Vorname</label>
-                                <input type="text" id="first_name" name="first_name" class="form-control" value="<?= $student->first_name ?? '' ?>" placeholder="Vorname" aria-label="First name" required>
+                                <input type="text" id="first_name" name="first_name" class="form-control" value="<?= $student->getFirstName() ?? '' ?>" placeholder="Vorname" aria-label="First name" required>
                             </div>
                             <div class="col-12">
                                 <label class="form-label" for="last_name">Nachname</label>
-                                <input type="text" id="last_name" name="last_name" class="form-control" value="<?= $student->last_name ?? '' ?>" placeholder="Nachname" aria-label="Last name" required>
+                                <input type="text" id="last_name" name="last_name" class="form-control" value="<?= $student->getLastName() ?? '' ?>" placeholder="Nachname" aria-label="Last name" required>
                             </div>
                             <div class="col-12">
-                                <input type="hidden" name="id" value="<?= $student->id ?>">
+                                <input type="hidden" name="id" value="<?= $student->getId() ?>">
                                 <button class="btn btn-primary w-100" type="submit" name="update">Aktualisieren</button>
                             </div>
                         </div>
@@ -187,13 +187,13 @@ $students = $db->findAll('student',['last_name' => 'ASC', 'first_name' => 'ASC']
                     <span class="list-group-item">StudentInnen</span>
                     <!-- Für jeden Datensatz einen Listeneintrag erstellen -->
                     <?php foreach ($students as $student) : ?>
-                        <a href="<?= "{$_SERVER['REMOTE_HOST']}?student_id={$student->id}" ?>" class="list-group-item-primary <?= $student->id !== $_GET['student_id'] ?: 'active' ?> list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <a href="<?= "{$_SERVER['REMOTE_HOST']}?student_id={$student->getId()}" ?>" class=" <?= $student->getId() != $_GET['student_id'] ?: 'active' ?> list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                             <span>
-                               <?= $student->first_name . ' ' . $student->last_name ?>
+                               <?= $student?>
                             </span>
                             <!-- Beginn, Formular zum Löschen des Datensatzes -->
                             <form method="post">
-                                <button class="btn btn-sm btn-danger" type="submit" name="delete" value="<?= $student->id ?>">Löschen</button>
+                                <button class="btn btn-sm btn-danger" type="submit" name="delete" value="<?= $student->getId() ?>">Löschen</button>
                             </form>
                             <!-- Ende, Formular -->
                         </a>
