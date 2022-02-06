@@ -45,10 +45,9 @@ class MysqlModel extends PDO implements ModelInterface
     /**
      * @param string $preparedStatement
      * @param array $data
-     * @param $mode
      * @return false|PDOStatement
      */
-    private function select(string $preparedStatement, array $data = [], $mode = null)
+    private function select(string $preparedStatement, array $data = [])
     {
         $statement = $this->prepare($preparedStatement);
         foreach ($data as $key => $value) {
@@ -111,51 +110,47 @@ class MysqlModel extends PDO implements ModelInterface
     }
 
     /**
-     * @param string $table
+     * @param string $entity
      * @param array $data
      * @param array $sortBy
-     * @param $mode
      * @return array|false|string
      */
-    public function findBy(string $table, array $data, array $sortBy = [], $mode = PDO::FETCH_OBJ)
+    public function findBy(string $entity, array $data, array $sortBy = [])
     {
-        $preparedStatement = "";
-        $i = 0;
-        $dataLength = count($data);
-        foreach ($data as $field => $value) {
-            $preparedStatement .= " {$field} = :{$field} ";
-            if (++$i !== $dataLength) $preparedStatement .= " AND ";
-        }
         try {
+            $entityClass = self::setEntityClass($entity);
+            $columns = self::setColumns($entityClass);
             $orderData = self::createOrderData($sortBy);
-            $result = self::select("SELECT * FROM $table WHERE ($preparedStatement) $orderData", $data);
-            return $result->fetchAll($mode);
+            $preparedStatement = self::setPreparedStatement($data);
+            $data = self::setBindValues($data);
+            $result = self::select("SELECT {$columns} FROM {$entityClass->getShortName()} WHERE ($preparedStatement) $orderData", $data);
+            return $result->fetchAll(PDO::FETCH_CLASS,$entity);
         } catch (PDOException $exception) {
             return $exception->getMessage();
+        } catch (ReflectionException $e) {
+            return $e->getMessage();
         }
     }
 
     /**
-     * @param string $table
+     * @param string $entity
      * @param array $data
-     * @param $mode
      * @return false|mixed|object|stdClass|string
      */
-    public function findOneBy(string $table, array $data, $mode = null)
+    public function findOneBy(string $entity, array $data)
     {
-        $preparedStatement = "";
-        $i = 0;
-        $dataLength = count($data);
-        foreach ($data as $field => $value) {
-            $preparedStatement .= " {$field} = :{$field} ";
-            if (++$i !== $dataLength) $preparedStatement .= " AND ";
-        }
         try {
-            $result = self::select("SELECT * FROM {$table} WHERE ({$preparedStatement}) LIMIT 0,1", $data, $mode);
-            if (false === $object = $result->fetchObject($mode)) return new stdClass();
+            $entityClass = self::setEntityClass($entity);
+            $columns = self::setColumns($entityClass);
+            $preparedStatement = self::setPreparedStatement($data);
+            $data = self::setBindValues($data);
+            $result = self::select("SELECT {$columns} FROM {$entityClass->getShortName()} WHERE ({$preparedStatement}) LIMIT 0,1", $data);
+            if (false === $object = $result->fetchObject($entity)) return new stdClass();
             return $object;
         } catch (PDOException $exception) {
             return $exception->getMessage();
+        } catch (ReflectionException $e) {
+            return $e->getMessage();
         }
     }
 
@@ -174,8 +169,10 @@ class MysqlModel extends PDO implements ModelInterface
      */
     private function createOrderData($sortBy): string
     {
+
         $orderData = "";
         if ($sortBy) {
+            $sortBy = self::setBindValues($sortBy);
             $orderData .= " ORDER BY ";
             $i = 0;
             foreach ($sortBy as $column => $direction) {
@@ -251,7 +248,7 @@ class MysqlModel extends PDO implements ModelInterface
             }
             $i++;
         }
-        $whereDetails = ltrim($whereDetails, ' AND ');
+        $whereDetails = ltrim($whereDetails, ' AND');
 
         $stmt = self::prepare("UPDATE $table SET $fieldDetails WHERE $whereDetails");
 
@@ -287,7 +284,7 @@ class MysqlModel extends PDO implements ModelInterface
             }
             $i++;
         }
-        $whereDetails = ltrim($whereDetails, ' AND ');
+        $whereDetails = ltrim($whereDetails, ' AND');
 
         //if limit is a number use a limit on the query
         $useLimit = "";
@@ -325,6 +322,28 @@ class MysqlModel extends PDO implements ModelInterface
             $columns .= "{$propertyNameAsSnakeTail} AS {$property->getName()},";
         }
         return $columns = rtrim($columns, ',');
+    }
+
+    private function setPreparedStatement($data):string
+    {
+        $preparedStatement = false;
+        foreach ($data as $property => $value) {
+            $propertyNameAsArray = preg_split('/(?=[A-Z])/', $property);
+            $propertyNameAsSnakeTail = strtolower(implode('_', $propertyNameAsArray));
+            $preparedStatement .= " {$propertyNameAsSnakeTail} = :{$propertyNameAsSnakeTail} AND";
+        }
+        return rtrim($preparedStatement, 'AND');
+    }
+
+    private function setBindValues($data):array
+    {
+        $dataAsSnakeTailedKeys = [];
+        foreach ($data as $property => $value) {
+            $propertyNameAsArray = preg_split('/(?=[A-Z])/', $property);
+            $propertyNameAsSnakeTail = strtolower(implode('_', $propertyNameAsArray));
+            $dataAsSnakeTailedKeys[$propertyNameAsSnakeTail] = $value;
+        }
+        return $dataAsSnakeTailedKeys;
     }
 
 }
