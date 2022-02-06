@@ -84,8 +84,6 @@ $studentsWagner = $db->findOneBy(Student::class,[
         'lastName' => 'Wagner',
 ]);
 
-print_r($studentsWagner);
-
 ?>
 
 <!-- Beginn, HTML Dokument -->
