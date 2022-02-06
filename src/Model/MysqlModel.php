@@ -99,7 +99,7 @@ class MysqlModel extends PDO implements ModelInterface
             $columns = self::setColumns($entityClass);
             $orderData = self::createOrderData($sortBy);
             $result = self::select("SELECT {$columns} FROM {$entityClass->getShortName()} $orderData");
-            return $result->fetchAll(PDO::FETCH_CLASS,$entity);
+            return $result->fetchAll(PDO::FETCH_CLASS, $entity);
         } catch (PDOException $exception) {
             return $exception->getMessage();
         } catch (ReflectionException $e) {
@@ -124,7 +124,7 @@ class MysqlModel extends PDO implements ModelInterface
             $preparedStatement = self::setPreparedStatement($data);
             $data = self::setBindValues($data);
             $result = self::select("SELECT {$columns} FROM {$entityClass->getShortName()} WHERE ($preparedStatement) $orderData", $data);
-            return $result->fetchAll(PDO::FETCH_CLASS,$entity);
+            return $result->fetchAll(PDO::FETCH_CLASS, $entity);
         } catch (PDOException $exception) {
             return $exception->getMessage();
         } catch (ReflectionException $e) {
@@ -308,11 +308,11 @@ class MysqlModel extends PDO implements ModelInterface
      */
     private function setEntityClass($entity): ReflectionClass
     {
-        if(!class_exists($entity)) throw new ReflectionException();
+        if (!class_exists($entity)) throw new ReflectionException();
         return new ReflectionClass($entity);
     }
 
-    private function setColumns(ReflectionClass $entityClass):string
+    private function setColumns(ReflectionClass $entityClass): string
     {
         $entityProperties = $entityClass->getProperties();
         $columns = false;
@@ -324,7 +324,7 @@ class MysqlModel extends PDO implements ModelInterface
         return $columns = rtrim($columns, ',');
     }
 
-    private function setPreparedStatement($data):string
+    private function setPreparedStatement($data): string
     {
         $preparedStatement = false;
         foreach ($data as $property => $value) {
@@ -335,7 +335,7 @@ class MysqlModel extends PDO implements ModelInterface
         return rtrim($preparedStatement, 'AND');
     }
 
-    private function setBindValues($data):array
+    private function setBindValues($data): array
     {
         $dataAsSnakeTailedKeys = [];
         foreach ($data as $property => $value) {
