@@ -32,25 +32,23 @@ interface ModelInterface
     public function findAll(string $entity, array $sortBy = []);
 
     /**
-     * @param string $table
+     * @param string $entity
      * @param array $data
      * @param array $sortBy
-     * @param int|null $mode
      * @return mixed
      *
      * Liefert alle Datensätze anhand verschiedener Suchkriterien.
      */
-    public function findBy(string $table, array $data, array $sortBy = [], ?int $mode = PDO::FETCH_OBJ);
+    public function findBy(string $entity, array $data, array $sortBy = []);
 
     /**
-     * @param string $table
+     * @param string $entity
      * @param array $data
-     * @param int|null $mode
      * @return mixed
      *
      * Liefert einen Datensatz anhand verschiedener Suchkriterien.
      */
-    public function findOneBy(string $table, array $data, int $mode = null);
+    public function findOneBy(string $entity, array $data);
 
     /**
      * @param string $table
